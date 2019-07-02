@@ -87,14 +87,16 @@ while True:
             print('Altitude: {} meters'.format(gps.altitude_m))
             # read the analog pin
         channel_1 = chan1.value
+        channel_1_64 = channel_1/64
         channel_2 = chan2.value
+        channel_2_64 = channel_2/64
 
         #convert 16bit adc0 (0-65535) trim pot read into 0-100 volume level
         level_1 = remap_range(channel_1, 64, 65472, 0, 100)
         level_2 = remap_range(channel_2, 64, 65472, 0, 100)
-        print("Percent Detection: %d , Raw Output: %d" % (level_1, channel_1/64))
-        print("Percent Detection: %d , Raw Output: %d" % (level_2, channel_2/64))
+        print("Percent Detection: %d , Raw Output: %d" % (level_1, channel_1_64))
+        print("Percent Detection: %d , Raw Output: %d" % (level_2, channel_2_64))
         
-        MESSAGE = '{},{},{},{},{},{}'.format(gps.altitude_m, gps.latitude, gps.longitude, gps.timestamp_utc, channel_1/64, channel_2/64)
+        MESSAGE = '{},{},{},{},{},{}'.format(gps.altitude_m, gps.latitude, gps.longitude, gps.timestamp_utc, channel_1_64, channel_2_64)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.sendto(MESSAGE, (UDP_IP,UDP_PORT))
