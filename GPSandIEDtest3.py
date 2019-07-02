@@ -9,6 +9,7 @@ import serial
 import digitalio
 import adafruit_mcp3xxx.mcp3008 as MCP
 from adafruit_mcp3xxx.analog_in import AnalogIn
+import socket
 
 uart = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=3000)
 gps = adafruit_gps.GPS(uart, debug=False) # Create a GPS module instance.
@@ -45,7 +46,15 @@ def remap_range(value, left_min, left_max, right_min, right_max):
     # Convert the 0-1 range into a value in the right range.
     return int(right_min + (valueScaled * right_span))
 
+# Setup for UDP stuff
+
+    #       print('{},{0:.6f},{0:.6f},{},{},{}'.format(gps.altitude_m, gps.latitude, gps.longitude, gps.timestamp_utc, channel_1/64, channel_2/64))
+    
+ 
 # Main loop runs forever printing the location, etc. every second.
+UDP_IP = "127.0.0.1"
+UDP_PORT = 5005
+
 last_print = time.monotonic()
 while True:
     # Make sure to call gps.update() every loop iteration and at least twice
@@ -71,6 +80,7 @@ while True:
             gps.timestamp_utc.tm_hour,  # not get all data like year, day,
             gps.timestamp_utc.tm_min,   # month!
             gps.timestamp_utc.tm_sec))
+        
         print('Latitude: {0:.6f} degrees'.format(gps.latitude))
         print('Longitude: {0:.6f} degrees'.format(gps.longitude))
         if gps.altitude_m is not None:
@@ -84,4 +94,7 @@ while True:
         level_2 = remap_range(channel_2, 64, 65472, 0, 100)
         print("Percent Detection: %d , Raw Output: %d" % (level_1, channel_1/64))
         print("Percent Detection: %d , Raw Output: %d" % (level_2, channel_2/64))
-#       print('{},{0:.6f},{0:.6f},{},{},{}'.format(gps.altitude_m, gps.latitude, gps.longitude, gps.timestamp_utc, channel_1/64, channel_2/64))
+        
+        MESSAGE = '{},{},{},{},{},{}'.format(gps.altitude_m, gps.latitude, gps.longitude, gps.timestamp_utc, channel_1/64, channel_2/64)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(MESSAGE, (UDP_IP,UDP_PORT))
